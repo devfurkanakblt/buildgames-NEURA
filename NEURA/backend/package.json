@@ -1,0 +1,33 @@
+{
+    "name": "neura-backend",
+    "version": "1.0.0",
+    "description": "Backend API for Neura Label-to-Earn Platform",
+    "type": "module",
+    "main": "src/index.js",
+    "scripts": {
+        "dev": "nodemon src/index.js",
+        "start": "node src/index.js",
+        "migrate": "node src/database/migrate.js"
+    },
+    "keywords": [
+        "web3",
+        "labeling",
+        "avalanche"
+    ],
+    "author": "Neura Team",
+    "license": "MIT",
+    "devDependencies": {
+        "cors": "^2.8.6",
+        "dotenv": "^16.6.1",
+        "ethers": "^6.16.0",
+        "express": "^4.22.1",
+        "form-data": "^4.0.5",
+        "multer": "^1.4.4",
+        "nodemon": "^3.1.11",
+        "pg": "^8.18.0",
+        "sharp": "^0.32.6"
+    },
+    "dependencies": {
+        "@supabase/supabase-js": "^2.97.0"
+    }
+}

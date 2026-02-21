@@ -1,0 +1,29 @@
+{
+  "name": "neura-smart-contracts",
+  "version": "1.0.0",
+  "description": "NeuraCore smart contracts for Avalanche C-Chain",
+  "type": "module",
+  "scripts": {
+    "compile": "hardhat compile",
+    "deploy:fuji": "hardhat run scripts/deploy.js --network fuji",
+    "deploy:avalanche": "hardhat run scripts/deploy.js --network avalanche",
+    "test": "hardhat test",
+    "verify": "hardhat verify"
+  },
+  "keywords": [
+    "avalanche",
+    "blockchain",
+    "defi",
+    "web3"
+  ],
+  "author": "Neura Team",
+  "license": "MIT",
+  "devDependencies": {
+    "@nomicfoundation/hardhat-toolbox": "^5.0.0",
+    "hardhat": "^2.22.0",
+    "dotenv": "^16.4.0"
+  },
+  "dependencies": {
+    "@openzeppelin/contracts": "^5.4.0"
+  }
+}
