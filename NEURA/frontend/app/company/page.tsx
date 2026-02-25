@@ -27,7 +27,6 @@ const TASK_TYPES = [
 ];
 
 const REWARD_PER_WORKER = 0.05; // AVAX
-const WORKERS_REQUIRED = 5;
 
 // ── Step Indicator ────────────────────────────────────────────────────────────
 
@@ -89,7 +88,6 @@ function NavHeader() {
                         { href: '/', label: 'TASKS', key: 'dashboard' },
                         { href: '/worker', label: 'WORKER', key: 'worker' },
                         { href: '/company', label: 'COMPANY', key: 'company' },
-                        { href: '/marketplace', label: 'MARKETPLACE', key: 'marketplace' },
                     ].map(item => (
                         <Link
                             key={item.key}
@@ -277,13 +275,14 @@ interface Step2Props {
     targetObject: string; setTargetObject: (v: string) => void;
     rewardPerWorker: string; setRewardPerWorker: (v: string) => void;
     minReputation: number; setMinReputation: (v: number) => void;
+    requiredWorkers: number; setRequiredWorkers: (v: number) => void;
     onBack: () => void; onNext: () => void;
     fileCount: number;
 }
-function Step2Config({ title, setTitle, taskType, setTaskType, targetObject, setTargetObject, rewardPerWorker, setRewardPerWorker, minReputation, setMinReputation, onBack, onNext, fileCount }: Step2Props) {
+function Step2Config({ title, setTitle, taskType, setTaskType, targetObject, setTargetObject, rewardPerWorker, setRewardPerWorker, minReputation, setMinReputation, requiredWorkers, setRequiredWorkers, onBack, onNext, fileCount }: Step2Props) {
     const isBulk = fileCount > 1;
     const taskCount = fileCount;
-    const totalCost = parseFloat(rewardPerWorker || '0') * WORKERS_REQUIRED * taskCount;
+    const totalCost = parseFloat(rewardPerWorker || '0') * requiredWorkers * taskCount;
     const platformFee = totalCost * 0.01;
     const totalWithFee = totalCost + platformFee;
 
@@ -354,13 +353,23 @@ function Step2Config({ title, setTitle, taskType, setTaskType, targetObject, set
                             <input
                                 type="number" value={rewardPerWorker} onChange={e => setRewardPerWorker(e.target.value)}
                                 step="0.001" min="0.001"
-                                className="w-full rounded-xl bg-[#050B18]/50 border border-white/10 pl-10 pr-16 py-3 text-sm font-medium text-white focus:border-primary/50 focus:ring-1 focus:ring-primary/20 focus:outline-none transition-all"
+                                className="w-full rounded-xl bg-[#050B18]/50 border border-white/10 pl-10 pr-16 py-3 text-sm font-medium text-white focus:border-primary/50 focus:ring-1 focus:ring-primary/20 focus:outline-none transition-all [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
                             />
                             <div className="absolute left-3 top-1/2 -translate-y-1/2 flex items-center pointer-events-none">
                                 <span className="text-primary font-bold">⬡</span>
                             </div>
                             <div className="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-slate-400 font-semibold">AVAX</div>
                         </div>
+                    </div>
+
+                    {/* Required Workers */}
+                    <div className="space-y-1.5">
+                        <label className="text-xs font-semibold text-slate-400 uppercase tracking-wider">Required Workers per Task</label>
+                        <input
+                            type="number" value={requiredWorkers} onChange={e => setRequiredWorkers(Number(e.target.value))}
+                            min="1"
+                            className="w-full rounded-xl bg-[#050B18]/50 border border-white/10 px-4 py-3 text-sm font-medium text-white placeholder-slate-600 focus:border-primary/50 focus:ring-1 focus:ring-primary/20 focus:outline-none transition-all [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                        />
                     </div>
 
                     {/* Min Reputation */}
@@ -410,7 +419,7 @@ function Step2Config({ title, setTitle, taskType, setTaskType, targetObject, set
                     <div className="space-y-3 mb-5 relative z-10">
                         {[
                             ...(isBulk ? [{ label: 'Images (Tasks)', value: String(fileCount) }] : []),
-                            { label: 'Workers / Task', value: String(WORKERS_REQUIRED) },
+                            { label: 'Workers / Task', value: String(requiredWorkers) },
                             { label: 'Reward / Worker', value: `${parseFloat(rewardPerWorker || '0').toFixed(3)} AVAX` },
                             { label: 'Subtotal', value: `${totalCost.toFixed(3)} AVAX` },
                         ].map(r => (
@@ -455,6 +464,7 @@ interface Step3Props {
     targetObject: string;
     rewardPerWorker: string;
     minReputation: number;
+    requiredWorkers: number;
     address: string | undefined;
     isCreating: boolean;
     uploadProgress: string;
@@ -464,11 +474,11 @@ interface Step3Props {
     onBack: () => void;
     onDeploy: () => void;
 }
-function Step3Review({ files, title, taskType, targetObject, rewardPerWorker, minReputation, address, isCreating, uploadProgress, error, createdTask, bulkResults, onBack, onDeploy }: Step3Props) {
+function Step3Review({ files, title, taskType, targetObject, rewardPerWorker, minReputation, requiredWorkers, address, isCreating, uploadProgress, error, createdTask, bulkResults, onBack, onDeploy }: Step3Props) {
     const isBulk = files.length > 1;
     const imagePreview = files.length === 1 ? URL.createObjectURL(files[0]) : null;
     const taskCount = files.length;
-    const totalCost = parseFloat(rewardPerWorker || '0') * WORKERS_REQUIRED * taskCount;
+    const totalCost = parseFloat(rewardPerWorker || '0') * requiredWorkers * taskCount;
     const platformFee = totalCost * 0.01;
     const totalWithFee = totalCost + platformFee;
 
@@ -507,9 +517,8 @@ function Step3Review({ files, title, taskType, targetObject, rewardPerWorker, mi
                         </div>
                     ))}
                 </div>
-                <div className="flex gap-3">
-                    <Link href="/worker" className="px-5 py-2.5 rounded-xl border border-primary/30 text-primary text-sm font-bold hover:bg-primary/10 transition-all">View as Worker</Link>
-                    <Link href="/marketplace" className="px-5 py-2.5 rounded-xl bg-gradient-to-r from-primary to-blue-400 text-black text-sm font-bold hover:shadow-neon transition-all">Go to Marketplace</Link>
+                <div className="flex gap-3 justify-center w-full mt-4">
+                    <Link href="/worker" className="px-5 py-2.5 rounded-xl bg-gradient-to-r from-primary to-blue-400 text-black text-sm font-bold hover:shadow-neon transition-all">View as Worker</Link>
                 </div>
             </motion.div>
         );
@@ -548,12 +557,9 @@ function Step3Review({ files, title, taskType, targetObject, rewardPerWorker, mi
                         💡 Save your Task ID to retrieve results later.
                     </div>
                 </div>
-                <div className="flex gap-3 w-full">
-                    <Link href="/worker" className="flex-1 py-3 text-center rounded-xl border border-primary/30 text-primary text-sm font-bold hover:bg-primary/10 transition-all">
+                <div className="flex gap-3 justify-center w-full mt-2">
+                    <Link href="/worker" className="w-full max-w-xs py-3 text-center rounded-xl bg-gradient-to-r from-primary to-blue-400 text-black text-sm font-bold hover:shadow-neon transition-all">
                         View as Worker
-                    </Link>
-                    <Link href="/marketplace" className="flex-1 py-3 text-center rounded-xl bg-gradient-to-r from-primary to-blue-400 text-black text-sm font-bold hover:shadow-neon transition-all">
-                        Go to Marketplace
                     </Link>
                 </div>
             </motion.div>
@@ -603,8 +609,8 @@ function Step3Review({ files, title, taskType, targetObject, rewardPerWorker, mi
                             { icon: 'my_location', label: 'Target Object', value: targetObject || '—' },
                             { icon: 'category', label: 'Task Type', value: taskType },
                             { icon: 'shield_person', label: 'Min Reputation', value: `${minReputation}+` },
-                            { icon: 'group', label: 'Total Workers', value: String(taskCount * WORKERS_REQUIRED) },
-                            { icon: 'payments', label: 'Reward / Task', value: `${(parseFloat(rewardPerWorker || '0') * WORKERS_REQUIRED).toFixed(3)} AVAX` },
+                            { icon: 'group', label: 'Total Workers', value: String(taskCount * requiredWorkers) },
+                            { icon: 'payments', label: 'Reward / Task', value: `${(parseFloat(rewardPerWorker || '0') * requiredWorkers).toFixed(3)} AVAX` },
                             { icon: 'account_balance_wallet', label: 'Funding Required', value: `${totalWithFee.toFixed(3)} AVAX` },
                         ].map(row => (
                             <div key={row.label} className="flex items-start gap-3">
@@ -743,7 +749,7 @@ function ResultsTab({ address }: { address: string | undefined }) {
                             type="number" value={taskIdInput} onChange={e => setTaskIdInput(e.target.value)}
                             onKeyDown={e => e.key === 'Enter' && handleQuery()}
                             placeholder="Task ID (e.g. 1, 2, 3…)"
-                            className="w-full rounded-xl bg-[#050B18]/50 border border-white/10 pl-10 pr-4 py-3 text-sm text-white placeholder-slate-600 focus:border-primary/50 focus:outline-none transition-all"
+                            className="w-full rounded-xl bg-[#050B18]/50 border border-white/10 pl-10 pr-4 py-3 text-sm text-white placeholder-slate-600 focus:border-primary/50 focus:outline-none transition-all [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
                         />
                     </div>
                     <button
@@ -832,6 +838,7 @@ export default function CompanyDashboard() {
     const [targetObject, setTargetObject] = useState('');
     const [rewardPerWorker, setRewardPerWorker] = useState('0.05');
     const [minReputation, setMinReputation] = useState(50);
+    const [requiredWorkers, setRequiredWorkers] = useState(5);
 
     // Submission state
     const [isCreating, setIsCreating] = useState(false);
@@ -854,6 +861,7 @@ export default function CompanyDashboard() {
             formData.append('reward_per_worker', rewardPerWorker);
             formData.append('company_wallet', address);
             formData.append('task_type', taskType);
+            formData.append('required_workers', String(requiredWorkers));
             try {
                 const res = await fetch(`${BACKEND_URL}/api/company/tasks/bulk`, { method: 'POST', body: formData });
                 if (!res.ok) { const err = await res.json(); throw new Error(err.error || 'Bulk upload failed'); }
@@ -874,6 +882,7 @@ export default function CompanyDashboard() {
             formData.append('reward_per_worker', rewardPerWorker);
             formData.append('company_wallet', address);
             formData.append('task_type', taskType);
+            formData.append('required_workers', String(requiredWorkers));
             try {
                 const res = await fetch(`${BACKEND_URL}/api/company/tasks`, { method: 'POST', body: formData });
                 if (!res.ok) { const err = await res.json(); throw new Error(err.error || 'Upload failed'); }
@@ -950,6 +959,7 @@ export default function CompanyDashboard() {
                                                 targetObject={targetObject} setTargetObject={setTargetObject}
                                                 rewardPerWorker={rewardPerWorker} setRewardPerWorker={setRewardPerWorker}
                                                 minReputation={minReputation} setMinReputation={setMinReputation}
+                                                requiredWorkers={requiredWorkers} setRequiredWorkers={setRequiredWorkers}
                                                 onBack={() => setStep(0)}
                                                 onNext={() => setStep(2)}
                                                 fileCount={files.length}
@@ -963,6 +973,7 @@ export default function CompanyDashboard() {
                                                 targetObject={targetObject}
                                                 rewardPerWorker={rewardPerWorker}
                                                 minReputation={minReputation}
+                                                requiredWorkers={requiredWorkers}
                                                 address={address}
                                                 isCreating={isCreating}
                                                 uploadProgress={uploadProgress}

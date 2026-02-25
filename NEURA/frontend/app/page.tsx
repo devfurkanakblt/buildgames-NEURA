@@ -35,7 +35,6 @@ function NavHeader({ active }: { active: 'dashboard' | 'worker' | 'company' | 'm
                         { href: '/', label: 'TASKS', key: 'dashboard' },
                         { href: '/worker', label: 'WORKER', key: 'worker' },
                         { href: '/company', label: 'COMPANY', key: 'company' },
-                        { href: '/marketplace', label: 'MARKETPLACE', key: 'marketplace' },
                     ].map(item => (
                         <Link
                             key={item.key}

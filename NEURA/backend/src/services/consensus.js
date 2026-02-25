@@ -24,7 +24,7 @@ export function calculateConsensus(submissions) {
         });
     });
 
-    const threshold = Math.ceil(submissions.length / 2);
+    const threshold = Math.ceil(submissions.length * 0.6);
 
     const consensusTiles = tileCounts
         .map((count, index) => ({ index, count }))
@@ -69,7 +69,7 @@ export function calculateClassificationConsensus(submissions) {
 
     console.log(`  Classification votes — yes: ${yesCount}, no: ${noCount}`);
 
-    const threshold = Math.ceil(submissions.length / 2);
+    const threshold = Math.ceil(submissions.length * 0.6);
     let consensusAnswer = null;
 
     if (yesCount >= threshold) consensusAnswer = 'yes';

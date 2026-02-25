@@ -371,7 +371,7 @@ export default function WorkerPage() {
                         <h1 className="text-xl font-bold tracking-tight text-white">NEURA</h1>
                     </Link>
                     <nav className="hidden md:flex items-center gap-8">
-                        {[{ href: '/', l: 'TASKS' }, { href: '/worker', l: 'WORKER', active: true }, { href: '/company', l: 'COMPANY' }, { href: '/marketplace', l: 'MARKETPLACE' }].map(n => (
+                        {[{ href: '/', l: 'TASKS' }, { href: '/worker', l: 'WORKER', active: true }, { href: '/company', l: 'COMPANY' }].map(n => (
                             <Link key={n.href} href={n.href} className={`text-sm font-medium tracking-wide py-1 border-b-2 transition-all ${n.active ? 'text-primary border-primary' : 'text-slate-400 border-transparent hover:text-white hover:border-white/20'}`}>{n.l}</Link>
                         ))}
                     </nav>
