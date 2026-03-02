@@ -5,6 +5,7 @@
  */
 
 import { getDefaultConfig } from '@rainbow-me/rainbowkit';
+import { metaMaskWallet, rainbowWallet, walletConnectWallet } from '@rainbow-me/rainbowkit/wallets';
 import { http } from 'wagmi';
 import { avalancheFuji, avalanche } from 'wagmi/chains';
 
@@ -13,6 +14,12 @@ const projectId = process.env.NEXT_PUBLIC_WALLETCONNECT_PROJECT_ID || 'demo-proj
 export const config = getDefaultConfig({
     appName: 'Neura - Neural Interface',
     projectId,
+    wallets: [
+        {
+            groupName: 'Recommended',
+            wallets: [metaMaskWallet, walletConnectWallet, rainbowWallet],
+        },
+    ],
     chains: [avalancheFuji, avalanche],
     transports: {
         [avalancheFuji.id]: http(),
