@@ -92,6 +92,7 @@ function NavHeader() {
                         <Link
                             key={item.key}
                             href={item.href}
+                            prefetch={true}
                             className={`text-sm font-medium tracking-wide py-1 border-b-2 transition-all ${item.key === 'company'
                                 ? 'text-primary border-primary'
                                 : 'text-slate-400 border-transparent hover:text-white hover:border-white/20'
@@ -275,14 +276,15 @@ interface Step2Props {
     targetObject: string; setTargetObject: (v: string) => void;
     rewardPerWorker: string; setRewardPerWorker: (v: string) => void;
     minReputation: number; setMinReputation: (v: number) => void;
-    requiredWorkers: number; setRequiredWorkers: (v: number) => void;
+    requiredWorkers: string; setRequiredWorkers: (v: string) => void;
     onBack: () => void; onNext: () => void;
     fileCount: number;
 }
 function Step2Config({ title, setTitle, taskType, setTaskType, targetObject, setTargetObject, rewardPerWorker, setRewardPerWorker, minReputation, setMinReputation, requiredWorkers, setRequiredWorkers, onBack, onNext, fileCount }: Step2Props) {
     const isBulk = fileCount > 1;
     const taskCount = fileCount;
-    const totalCost = parseFloat(rewardPerWorker || '0') * requiredWorkers * taskCount;
+    const workersCount = Number(requiredWorkers) || 1;
+    const totalCost = parseFloat(rewardPerWorker || '0') * workersCount * taskCount;
     const platformFee = totalCost * 0.01;
     const totalWithFee = totalCost + platformFee;
 
@@ -366,7 +368,7 @@ function Step2Config({ title, setTitle, taskType, setTaskType, targetObject, set
                     <div className="space-y-1.5">
                         <label className="text-xs font-semibold text-slate-400 uppercase tracking-wider">Required Workers per Task</label>
                         <input
-                            type="number" value={requiredWorkers} onChange={e => setRequiredWorkers(Number(e.target.value))}
+                            type="number" value={requiredWorkers} onChange={e => setRequiredWorkers(e.target.value.replace(/^0+/, '') || '')}
                             min="1"
                             className="w-full rounded-xl bg-[#050B18]/50 border border-white/10 px-4 py-3 text-sm font-medium text-white placeholder-slate-600 focus:border-primary/50 focus:ring-1 focus:ring-primary/20 focus:outline-none transition-all [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
                         />
@@ -464,7 +466,7 @@ interface Step3Props {
     targetObject: string;
     rewardPerWorker: string;
     minReputation: number;
-    requiredWorkers: number;
+    requiredWorkers: string;
     address: string | undefined;
     isCreating: boolean;
     uploadProgress: string;
@@ -478,7 +480,8 @@ function Step3Review({ files, title, taskType, targetObject, rewardPerWorker, mi
     const isBulk = files.length > 1;
     const imagePreview = files.length === 1 ? URL.createObjectURL(files[0]) : null;
     const taskCount = files.length;
-    const totalCost = parseFloat(rewardPerWorker || '0') * requiredWorkers * taskCount;
+    const workersCount = Number(requiredWorkers) || 1;
+    const totalCost = parseFloat(rewardPerWorker || '0') * workersCount * taskCount;
     const platformFee = totalCost * 0.01;
     const totalWithFee = totalCost + platformFee;
 
@@ -518,7 +521,7 @@ function Step3Review({ files, title, taskType, targetObject, rewardPerWorker, mi
                     ))}
                 </div>
                 <div className="flex gap-3 justify-center w-full mt-4">
-                    <Link href="/worker" className="px-5 py-2.5 rounded-xl bg-gradient-to-r from-primary to-blue-400 text-black text-sm font-bold hover:shadow-neon transition-all">View as Worker</Link>
+                    <Link href="/worker" prefetch={true} className="px-5 py-2.5 rounded-xl bg-gradient-to-r from-primary to-blue-400 text-black text-sm font-bold hover:shadow-neon transition-all">View as Worker</Link>
                 </div>
             </motion.div>
         );
@@ -558,7 +561,7 @@ function Step3Review({ files, title, taskType, targetObject, rewardPerWorker, mi
                     </div>
                 </div>
                 <div className="flex gap-3 justify-center w-full mt-2">
-                    <Link href="/worker" className="w-full max-w-xs py-3 text-center rounded-xl bg-gradient-to-r from-primary to-blue-400 text-black text-sm font-bold hover:shadow-neon transition-all">
+                    <Link href="/worker" prefetch={true} className="w-full max-w-xs py-3 text-center rounded-xl bg-gradient-to-r from-primary to-blue-400 text-black text-sm font-bold hover:shadow-neon transition-all">
                         View as Worker
                     </Link>
                 </div>
@@ -609,8 +612,8 @@ function Step3Review({ files, title, taskType, targetObject, rewardPerWorker, mi
                             { icon: 'my_location', label: 'Target Object', value: targetObject || '—' },
                             { icon: 'category', label: 'Task Type', value: taskType },
                             { icon: 'shield_person', label: 'Min Reputation', value: `${minReputation}+` },
-                            { icon: 'group', label: 'Total Workers', value: String(taskCount * requiredWorkers) },
-                            { icon: 'payments', label: 'Reward / Task', value: `${(parseFloat(rewardPerWorker || '0') * requiredWorkers).toFixed(3)} AVAX` },
+                            { icon: 'group', label: 'Total Workers', value: String(taskCount * workersCount) },
+                            { icon: 'payments', label: 'Reward / Task', value: `${(parseFloat(rewardPerWorker || '0') * workersCount).toFixed(3)} AVAX` },
                             { icon: 'account_balance_wallet', label: 'Funding Required', value: `${totalWithFee.toFixed(3)} AVAX` },
                         ].map(row => (
                             <div key={row.label} className="flex items-start gap-3">
@@ -835,10 +838,10 @@ export default function CompanyDashboard() {
     // Form state
     const [taskType, setTaskType] = useState(TASK_TYPES[0]);
     const [title, setTitle] = useState('');
-    const [targetObject, setTargetObject] = useState('');
-    const [rewardPerWorker, setRewardPerWorker] = useState('0.05');
-    const [minReputation, setMinReputation] = useState(50);
-    const [requiredWorkers, setRequiredWorkers] = useState(5);
+    const [targetObject, setTargetObject] = useState('traffic light');
+    const [rewardPerWorker, setRewardPerWorker] = useState(REWARD_PER_WORKER.toString());
+    const [minReputation, setMinReputation] = useState<number>(50);
+    const [requiredWorkers, setRequiredWorkers] = useState<string>('5');
 
     // Submission state
     const [isCreating, setIsCreating] = useState(false);
@@ -862,6 +865,7 @@ export default function CompanyDashboard() {
             formData.append('company_wallet', address);
             formData.append('task_type', taskType);
             formData.append('required_workers', String(requiredWorkers));
+            formData.append('min_reputation', String(minReputation));
             try {
                 const res = await fetch(`${BACKEND_URL}/api/company/tasks/bulk`, { method: 'POST', body: formData });
                 if (!res.ok) { const err = await res.json(); throw new Error(err.error || 'Bulk upload failed'); }
@@ -883,6 +887,7 @@ export default function CompanyDashboard() {
             formData.append('company_wallet', address);
             formData.append('task_type', taskType);
             formData.append('required_workers', String(requiredWorkers));
+            formData.append('min_reputation', String(minReputation));
             try {
                 const res = await fetch(`${BACKEND_URL}/api/company/tasks`, { method: 'POST', body: formData });
                 if (!res.ok) { const err = await res.json(); throw new Error(err.error || 'Upload failed'); }

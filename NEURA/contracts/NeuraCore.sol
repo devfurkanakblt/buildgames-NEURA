@@ -254,18 +254,27 @@ contract NeuraCore is Ownable, ReentrancyGuard {
             }
         }
 
-        // Find the most common choice (majority)
+        // Find the most common choice (majority) efficiently by pre-hashing
+        bytes32[] memory choiceHashes = new bytes32[](revealedCount);
+        for (uint256 i = 0; i < revealedCount; i++) {
+            choiceHashes[i] = keccak256(bytes(choices[i]));
+        }
+
         string memory majorityAnswer = "";
+        bytes32 majorityHash = bytes32(0);
         uint256 maxVotes = 0;
 
         for (uint256 i = 0; i < revealedCount; i++) {
             uint256 count = 0;
             for (uint256 j = 0; j < revealedCount; j++) {
-                if (_strEq(choices[i], choices[j])) count++;
+                if (choiceHashes[i] == choiceHashes[j]) {
+                    count++;
+                }
             }
             if (count > maxVotes) {
                 maxVotes = count;
                 majorityAnswer = choices[i];
+                majorityHash = choiceHashes[i];
             }
         }
 
@@ -280,13 +289,14 @@ contract NeuraCore is Ownable, ReentrancyGuard {
 
             if (!c.revealed) continue;
 
-            bool isCorrect = _strEq(c.choice, majorityAnswer) && maxVotes >= threshold;
+            bool isCorrect = (choiceHashes[i] == majorityHash) && maxVotes >= threshold;
 
             if (isCorrect) {
                 // Pay the worker
                 uint256 reward = task.rewardPerVote;
                 if (address(this).balance >= reward) {
-                    (bool sent, ) = payable(voter).call{value: reward}("");
+                    // Specify a gas limit to prevent reentrancy/gas griefing attacks
+                    (bool sent, ) = payable(voter).call{value: reward, gas: 5000}("");
                     if (sent) rewardDistributed += reward;
                 }
 

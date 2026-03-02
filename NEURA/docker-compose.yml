@@ -1,0 +1,28 @@
+version: '3.8'
+
+services:
+  backend:
+    build: ./backend
+    ports:
+      - "3002:3002"
+    env_file:
+      - ./backend/.env
+    restart: unless-stopped
+    networks:
+      - neura_net
+
+  frontend:
+    build: ./frontend
+    ports:
+      - "3000:3000"
+    environment:
+      - NEXT_PUBLIC_API_URL=http://localhost:3002
+    depends_on:
+      - backend
+    restart: unless-stopped
+    networks:
+      - neura_net
+
+networks:
+  neura_net:
+    driver: bridge

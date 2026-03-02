@@ -5,13 +5,15 @@
  * Stitch-designed Neural Interface
  */
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 import { useAccount } from 'wagmi';
 import { ConnectButton } from '@rainbow-me/rainbowkit';
 import { motion, AnimatePresence } from 'framer-motion';
 import Link from 'next/link';
 import TaskCard from '@/components/TaskCard';
 import { useTaskCounter, useTaskDetails, useNodeInfo, useRegisterNode } from '@/lib/contracts/hooks';
+
+const BACKEND_URL = process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:3002';
 
 /* ─── Shared Nav Header ───────────────────────────────────────────────────── */
 function NavHeader({ active }: { active: 'dashboard' | 'worker' | 'company' | 'marketplace' }) {
@@ -39,6 +41,7 @@ function NavHeader({ active }: { active: 'dashboard' | 'worker' | 'company' | 'm
                         <Link
                             key={item.key}
                             href={item.href}
+                            prefetch={true}
                             className={`text-sm font-medium tracking-wide py-1 border-b-2 transition-all ${active === item.key
                                 ? 'text-primary border-primary'
                                 : 'text-slate-400 border-transparent hover:text-white hover:border-white/20'
@@ -71,6 +74,23 @@ export default function HomePage() {
     const { node } = useNodeInfo(address);
     const { register, isRegistering, isRegistered } = useRegisterNode();
     const [activeTaskIds, setActiveTaskIds] = useState<number[]>([]);
+    const [stats, setStats] = useState({ tasksCompleted: 0, totalEarned: '0', reputation: 50 });
+
+    const fetchWorkerStats = useCallback(async () => {
+        if (!address) return;
+        try {
+            const res = await fetch(`${BACKEND_URL}/api/worker/tasks?worker_address=${address}`);
+            if (!res.ok) return;
+            const data = await res.json();
+            if (data.stats) setStats(data.stats);
+        } catch (e) {
+            console.error('Failed to fetch worker stats', e);
+        }
+    }, [address]);
+
+    useEffect(() => {
+        if (isConnected) fetchWorkerStats();
+    }, [isConnected, fetchWorkerStats]);
 
     useEffect(() => {
         if (totalTasks > 0) {
@@ -232,28 +252,26 @@ export default function HomePage() {
                                     {
                                         icon: 'military_tech', color: 'text-primary', bg: 'bg-primary/15',
                                         label: 'Reputation Score',
-                                        value: node ? Number(node.reputationScore) : 0,
+                                        value: stats.reputation,
                                         sub: '+2.5%', subColor: 'text-secondary',
                                         barColor: 'bg-primary shadow-neon', barW: '85%',
                                     },
                                     {
                                         icon: 'check_circle', color: 'text-secondary', bg: 'bg-secondary/15',
                                         label: 'Tasks Completed',
-                                        value: node ? Number(node.tasksCompleted) : 0,
+                                        value: stats.tasksCompleted,
                                         sub: '+4 today', subColor: 'text-secondary',
                                         barColor: 'bg-secondary shadow-neon-green', barW: '60%',
                                     },
                                     {
                                         icon: 'paid', color: 'text-purple-400', bg: 'bg-purple-500/15',
                                         label: 'Earnings',
-                                        value: node
-                                            ? `${(Number(node.correctAnswers) * 0.05).toFixed(3)} AVAX`
-                                            : '0 AVAX',
-                                        sub: node && node.correctAnswers > 0n ? `${Number(node.correctAnswers)} correct` : 'No tasks yet',
+                                        value: `${stats.totalEarned} AVAX`,
+                                        sub: stats.tasksCompleted > 0 ? `${stats.tasksCompleted} tasks done` : 'No tasks yet',
                                         subColor: 'text-secondary',
                                         barColor: 'bg-gradient-to-r from-primary to-purple-500',
-                                        barW: node && node.tasksCompleted > 0n
-                                            ? `${Math.min(Math.round((Number(node.correctAnswers) / Number(node.tasksCompleted)) * 100), 100)}%`
+                                        barW: stats.tasksCompleted > 0
+                                            ? `${Math.min(Number(stats.totalEarned) > 0 ? 100 : 50, 100)}%`
                                             : '0%',
                                     },
                                 ].map(s => (
@@ -294,7 +312,7 @@ export default function HomePage() {
                                             </span>
                                         )}
                                     </div>
-                                    <Link href="/worker" className="flex items-center gap-1 text-sm text-primary hover:text-white transition-colors">
+                                    <Link href="/worker" prefetch={true} className="flex items-center gap-1 text-sm text-primary hover:text-white transition-colors">
                                         <span className="material-symbols-outlined" style={{ fontSize: '18px' }}>open_in_new</span>
                                         Worker Mode
                                     </Link>
@@ -309,7 +327,7 @@ export default function HomePage() {
                                         <div className="text-5xl opacity-40">📋</div>
                                         <p className="text-xl text-slate-400">No active tasks available</p>
                                         <p className="text-sm text-slate-600">Check back soon for new labeling tasks</p>
-                                        <Link href="/company" className="mt-2 px-4 py-2 rounded-lg border border-primary/30 text-primary text-sm hover:bg-primary/10 transition-all">
+                                        <Link href="/company" prefetch={true} className="mt-2 px-4 py-2 rounded-lg border border-primary/30 text-primary text-sm hover:bg-primary/10 transition-all">
                                             + Create Task as Company
                                         </Link>
                                     </motion.div>
@@ -325,19 +343,6 @@ export default function HomePage() {
                     )}
                 </AnimatePresence>
             </main>
-
-            {/* Footer */}
-            <footer className="relative z-10 border-t border-slate-800/50 bg-background-dark/80 backdrop-blur-sm py-8 mt-auto">
-                <div className="max-w-7xl mx-auto px-6 flex flex-col md:flex-row justify-between items-center gap-4">
-                    <div className="flex items-center gap-2">
-                        <div className="size-6 bg-primary/20 rounded-md flex items-center justify-center border border-primary/20">
-                            <span className="text-primary font-bold text-xs">N</span>
-                        </div>
-                        <span className="text-slate-400 text-sm">© 2024 Neura Protocol.</span>
-                    </div>
-                    <p className="text-slate-500 text-sm">Powered by Avalanche C-Chain · Built for BuildGames Hackathon</p>
-                </div>
-            </footer>
 
             {/* AI bot FAB */}
             <button className="fixed bottom-8 right-8 w-14 h-14 rounded-full bg-primary/20 backdrop-blur-md border border-primary text-primary hover:bg-primary hover:text-black hover:shadow-neon transition-all flex items-center justify-center z-50 group">

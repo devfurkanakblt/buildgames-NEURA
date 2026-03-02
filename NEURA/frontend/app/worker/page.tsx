@@ -372,7 +372,7 @@ export default function WorkerPage() {
                     </Link>
                     <nav className="hidden md:flex items-center gap-8">
                         {[{ href: '/', l: 'TASKS' }, { href: '/worker', l: 'WORKER', active: true }, { href: '/company', l: 'COMPANY' }].map(n => (
-                            <Link key={n.href} href={n.href} className={`text-sm font-medium tracking-wide py-1 border-b-2 transition-all ${n.active ? 'text-primary border-primary' : 'text-slate-400 border-transparent hover:text-white hover:border-white/20'}`}>{n.l}</Link>
+                            <Link key={n.href} href={n.href} prefetch={true} className={`text-sm font-medium tracking-wide py-1 border-b-2 transition-all ${n.active ? 'text-primary border-primary' : 'text-slate-400 border-transparent hover:text-white hover:border-white/20'}`}>{n.l}</Link>
                         ))}
                     </nav>
                     <ConnectButton />
@@ -462,7 +462,7 @@ export default function WorkerPage() {
                                 <div className="text-5xl opacity-30">📭</div>
                                 <p className="text-xl text-slate-400 font-medium">No tasks found</p>
                                 <p className="text-slate-600 text-sm">Try changing the filter or check back later</p>
-                                <Link href="/company" className="mt-2 px-4 py-2 rounded-lg border border-primary/30 text-primary text-sm hover:bg-primary/10 transition-all">
+                                <Link href="/company" prefetch={true} className="mt-2 px-4 py-2 rounded-lg border border-primary/30 text-primary text-sm hover:bg-primary/10 transition-all">
                                     + Create Task as Company
                                 </Link>
                             </div>
@@ -484,12 +484,6 @@ export default function WorkerPage() {
                 )}
             </main>
 
-            <footer className="relative z-10 border-t border-slate-800/50 bg-background-dark/80 backdrop-blur-sm py-8 mt-auto">
-                <div className="max-w-7xl mx-auto px-6 text-center">
-                    <p className="text-slate-500 text-sm">© 2024 Neura Protocol · Powered by Avalanche C-Chain</p>
-                </div>
-            </footer>
-
             {/* Single AnimatePresence with one TaskModal child — no reconciliation ambiguity */}
             <AnimatePresence>
                 {selectedTask && (
@@ -502,6 +496,6 @@ export default function WorkerPage() {
                     />
                 )}
             </AnimatePresence>
-        </div>
+        </div >
     );
 }

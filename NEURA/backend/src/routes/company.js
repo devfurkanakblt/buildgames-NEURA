@@ -34,6 +34,7 @@ router.post('/tasks', upload.single('image'), async (req, res) => {
             company_wallet,
             task_type = 'Object Detection (Bounding Box)',
             required_workers = 5,
+            min_reputation = 50,
         } = req.body;
 
         if (!req.file) return res.status(400).json({ error: 'Image is required' });
@@ -45,6 +46,7 @@ router.post('/tasks', upload.single('image'), async (req, res) => {
 
         const originalUrl = getIpfsUrl(originalCid);
         const requiredWorkersInt = parseInt(required_workers, 10) || 5;
+        const minReputationInt = parseInt(min_reputation, 10) || 50;
         const rewardPerWorkerFloat = parseFloat(reward_per_worker);
         const totalReward = rewardPerWorkerFloat * requiredWorkersInt;
 
@@ -71,6 +73,7 @@ router.post('/tasks', upload.single('image'), async (req, res) => {
                 grid_rows: rows,
                 grid_metadata: [],
                 required_workers: requiredWorkersInt,
+                min_reputation: minReputationInt,
                 reward_per_worker: rewardPerWorkerFloat,
                 total_reward: totalReward,
                 status: 'active',
@@ -97,6 +100,7 @@ router.post('/tasks/bulk', upload.array('images', BULK_LIMIT), async (req, res) 
             company_wallet,
             task_type = 'Object Detection (Bounding Box)',
             required_workers = 5,
+            min_reputation = 50,
         } = req.body;
 
         const files = req.files;
@@ -106,6 +110,7 @@ router.post('/tasks/bulk', upload.array('images', BULK_LIMIT), async (req, res) 
             return res.status(400).json({ error: 'Missing required fields' });
 
         const requiredWorkersInt = parseInt(required_workers, 10) || 5;
+        const minReputationInt = parseInt(min_reputation, 10) || 50;
         const rewardPerWorkerFloat = parseFloat(reward_per_worker);
         const totalReward = rewardPerWorkerFloat * requiredWorkersInt;
 
@@ -156,6 +161,7 @@ router.post('/tasks/bulk', upload.array('images', BULK_LIMIT), async (req, res) 
                 grid_rows: s.rows,
                 grid_metadata: [],
                 required_workers: requiredWorkersInt,
+                min_reputation: minReputationInt,
                 reward_per_worker: rewardPerWorkerFloat,
                 total_reward: totalReward,
                 status: 'active',

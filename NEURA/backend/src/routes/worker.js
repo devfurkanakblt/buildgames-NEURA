@@ -14,21 +14,49 @@ router.get('/tasks', async (req, res) => {
         const { worker_address } = req.query;
         if (!supabase) return res.json({ tasks: [] });
 
-        // Find tasks already submitted by this worker (skip if no address provided)
+        // 1. Calculate worker stats & reputation first if address is provided
         let submittedIds = [];
+        let workerReputation = 100; // Unauthenticated users see all as showcase
+        let stats = null;
+
         if (worker_address) {
-            const { data: submitted } = await supabase
+            const { data: workerSubs } = await supabase
                 .from('submissions')
-                .select('task_id')
+                .select('is_correct, task_id')
                 .eq('worker_address', worker_address.toLowerCase());
-            submittedIds = (submitted ?? []).map(s => s.task_id);
+
+            submittedIds = (workerSubs ?? []).map(s => s.task_id);
+
+            const completed = (workerSubs ?? []).length;
+            const correctSubs = (workerSubs ?? []).filter(s => s.is_correct === true);
+            const correct = correctSubs.length;
+
+            workerReputation = completed > 0 ? Math.round((correct / completed) * 100) : 50;
+
+            let totalEarned = 0;
+            if (correct > 0) {
+                const correctTaskIds = correctSubs.map(s => s.task_id);
+                const { data: correctTasks } = await supabase
+                    .from('tasks')
+                    .select('reward_per_worker')
+                    .in('id', correctTaskIds);
+
+                totalEarned = (correctTasks ?? []).reduce((sum, t) => sum + (Number(t.reward_per_worker) || 0), 0);
+            }
+
+            stats = {
+                tasksCompleted: completed,
+                totalEarned: totalEarned.toFixed(3),
+                reputation: workerReputation,
+            };
         }
 
-        // Fetch active tasks that still have capacity
+        // 2. Fetch active tasks that still have capacity and meet reputation
         let query = supabase
             .from('tasks')
             .select('*')
             .eq('status', 'active')
+            .lte('min_reputation', workerReputation)
             .order('created_at', { ascending: false });
 
         if (submittedIds.length > 0) {
@@ -46,30 +74,13 @@ router.get('/tasks', async (req, res) => {
             original_url: getIpfsUrl(t.original_image_cid),
             reward_per_worker: t.reward_per_worker,
             required_workers: t.required_workers ?? REQUIRED_WORKERS,
+            min_reputation: t.min_reputation ?? 50,
             current_workers: t.current_workers ?? 0,
             workers_remaining: (t.required_workers ?? REQUIRED_WORKERS) - (t.current_workers ?? 0),
             status: t.status ?? 'active',
             cols: t.grid_cols ?? 3,
             rows: t.grid_rows ?? 4,
         }));
-
-        // Optionally include worker stats if address provided
-        let stats = null;
-        if (worker_address) {
-            const { data: workerSubs } = await supabase
-                .from('submissions')
-                .select('is_correct, task_id')
-                .eq('worker_address', worker_address.toLowerCase());
-
-            const completed = (workerSubs ?? []).length;
-            const correct = (workerSubs ?? []).filter(s => s.is_correct).length;
-
-            stats = {
-                tasksCompleted: completed,
-                totalEarned: '0',   // Earnings tracked on-chain, not in DB
-                reputation: completed > 0 ? Math.round((correct / completed) * 100) : 50,
-            };
-        }
 
         res.json({ tasks: result, ...(stats ? { stats } : {}) });
     } catch (err) {

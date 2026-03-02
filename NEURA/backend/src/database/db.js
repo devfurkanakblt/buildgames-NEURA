@@ -13,7 +13,7 @@ const supabase = supabaseUrl && supabaseKey
     ? createClient(supabaseUrl, supabaseKey)
     : null;
 
-if (supabase) {
+if (supabase && process.env.NODE_ENV !== 'test') {
     // Quick connection test
     supabase.from('tasks').select('count', { count: 'exact', head: true })
         .then(({ error }) => {
