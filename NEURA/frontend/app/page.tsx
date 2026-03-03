@@ -13,7 +13,7 @@ import Link from 'next/link';
 import TaskCard from '@/components/TaskCard';
 import { useTaskCounter, useTaskDetails, useNodeInfo, useRegisterNode } from '@/lib/contracts/hooks';
 
-const BACKEND_URL = process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:3002';
+const BACKEND_URL = (process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:3002').replace(/\/$/, '');
 
 /* ─── Shared Nav Header ───────────────────────────────────────────────────── */
 function NavHeader({ active }: { active: 'dashboard' | 'worker' | 'company' | 'marketplace' }) {
